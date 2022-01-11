@@ -167,6 +167,7 @@ public:
     }
 
     void changeBuffer(int T, int who) {
+        type = T;
         buffer = T;
     }
 
@@ -251,7 +252,7 @@ int main()
     t4.loadFromFile("images/asteroids/rock.png");
     //t5.loadFromFile("images/asteroids/fire_red.png");
     t5.loadFromFile("images/asteroids/bullet_16.png");
-    t8.loadFromFile("images/asteroids/bullet_big.png");
+    t8.loadFromFile("images/asteroids/big.png");
     t6.loadFromFile("images/asteroids/rock_small.png");
     t7.loadFromFile("images/asteroids/explosions/type_B.png");
 
@@ -341,12 +342,15 @@ int main()
             switch (type) {
             case(1):
                 buffer->settings(Buffer1, randX, randY, 0, 0);
+                buffer->type = type;
                 break;
             case(2):
                 buffer->settings(Buffer2, randX, randY, 0, 0);
+                buffer->type = type;
                 break;
             case(3):
                 buffer->settings(Buffer3, randX, randY, 0, 0);
+                buffer->type = type;
                 break;
             }
             entities.push_back(buffer);
@@ -380,13 +384,13 @@ int main()
                         }
                         else {
                             b->settings(sBigBullet, p->x, p->y, p->angle, 20);
+                            b->R = 40;
                             b->setSize(2, 2);
                         }
                         entities.push_back(b);
                         //bulletNum--;
                         //press++;
                     }
-
                 }
                 if (event.key.code == Keyboard::J)
                 {
@@ -401,6 +405,7 @@ int main()
                         else {
                             b2->settings(sBigBullet, p2->x, p2->y, p2->angle, 20);
                             b2->setSize(2, 2);
+                            b2->R = 40;
                         }
                         entities.push_back(b2);
                         //bulletNum--;
@@ -467,7 +472,6 @@ int main()
                     if (isCollide(a, b))
                     {
                         b->life = false;
-
                         Entity* e = new Entity();
                         e->settings(sExplosion_ship, a->x, a->y);
                         e->name = "explosion";
@@ -534,7 +538,7 @@ int main()
                         p->settings(sPlayer, W / 2, H / 2, 0, 20);
                         p->dx = 0; p->dy = 0;
                         */
-
+                        p2-> type = b->type
                         p2->changeBuffer(b->type, 2);
                     }
             }
