@@ -1,0 +1,4 @@
+buffer 1 -> make bullet bigger
+buffer 2 -> make tank smaller
+buffer 3 -> make bullet quicker
+buffer 4 -> enable bullet through the wall 
