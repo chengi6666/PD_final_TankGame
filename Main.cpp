@@ -100,6 +100,7 @@ public:
 class bullet : public Entity
 {
 public:
+    int collision = 0;
     bullet()
     {
         name = "bullet";
@@ -111,25 +112,24 @@ public:
         //dy = sin(angle * DEGTORAD) * 6;
         // angle+=rand()%6-3;
 
-        if (x < 0)
+        if (x < 0 || x > W)
         {
             dx = -dx;
+            collision++;
         }
-        if (x > W)
-        {
-            dx = -dx;
-        }
-        if (y < 0)
+        if (y < 0 || y > H)
         {
             dy = -dy;
+            collision++;
         }
-        if (y > H)
-        {
-            dy = -dy;
-        }
+
         x += dx;
         y += dy;
-        //if (x > W || x<0 || y>H || y < 0) life = 0; // out of bounds => die
+        
+        if (collision >= 5)
+        {
+            life = 0;
+        }
 
     }
 
@@ -140,7 +140,7 @@ class player : public Entity
 {
 public:
     bool thrust, back;
-    int buffer;	
+    int buffer;
 
     player()
     {
@@ -178,7 +178,7 @@ public:
             dy *= maxSpeed / speed;
         }
 
-        if (dx + x < W && dx + x > 0 && dy + y < H && dy + y > 0) 
+        if (dx + x < W && dx + x > 0 && dy + y < H && dy + y > 0)
         {
             x += dx;
             y += dy;
@@ -190,31 +190,6 @@ public:
 
 };
 
-/*class buff : public Entity
-    {
-    public:
-        buff()
-        {
-        }
-        buff(int t)
-        {
-            type = t;
-
-        }
-    };*/
-
-class buffer : public Entity
-{
-public:
-    buffer()
-    {
-        name = "buffer";
-    }
-    buffer(int t)
-    {
-        type = t;
-    }
-};
 
 bool isCollide(Entity* a, Entity* b)
 {
@@ -229,10 +204,8 @@ int main()
     srand(time(0));
     sf::Clock clock;
     sf::Clock clock2;
-    sf::Clock bufferClock;
     sf::Time time;
     sf::Time time2;
-    sf::Time bufferTime;
     sf::Music bgm, start, endSound;
     bgm.openFromFile("audio effect/bgm.ogg");
     start.openFromFile("audio effect/start.ogg");
@@ -355,53 +328,27 @@ int main()
     gunshotSound.setBuffer(gunshotBuffer);
     int test = 0;
 
-    sf::RectangleShape rec1;
-    rec1.setSize(sf::Vector2f(100, 100));
-    rec1.setFillColor(sf::Color::White);
-    rec1.setPosition(300, 300);
     /////main loop/////
     while (app.isOpen())
     {
-        
+
         app.clear();
-        app.draw(background);
-        if (score1 >= 5 || score2 >= 5)
-        {
-            bgm.stop();
-            endSound.play();
-            cin >> test;
-            Game = false;
-        }
+
         if (atStartMenu)
         {
-            
+
             app.draw(StartMenu);
             //continue;
         }
-        bufferTime = bufferClock.getElapsedTime();
-        if (bufferTime.asSeconds() > 5)
-        {
-            for (auto i = entities.begin(); i != entities.end();)
-            {
-                Entity* e = *i;
-                if (e->name == "bigbuffer") { e->life = false; i = entities.erase(i); delete e; }
-                else i++;
-            }
-            buffer* big = new buffer();
-            big->name = "bigbuffer";
-            int randx = rand() % W + 1;
-            int randy = rand() % H + 1;
-            big->settings(sBigBuff, randx, randy, 0, 0);
-            entities.push_back(big);
-            bufferClock.restart();
-        }
+
         Event event;
         while (app.pollEvent(event))
         {
             if (event.type == Event::Closed)
                 app.close();
 
-            if (event.type == Event::KeyPressed)
+            if (!atStartMenu)
+            {
                 if (event.key.code == Keyboard::Space)
                 {
                     time = clock.getElapsedTime();
@@ -420,60 +367,65 @@ int main()
                     }
 
                 }
-            if (event.key.code == Keyboard::Enter)
-            {
-                atStartMenu = false;
-                start.stop();
-                bgm.play();
-                
-            }
-            if (event.key.code == Keyboard::J)
-            {
-                time2 = clock2.getElapsedTime();
-                if (time2.asSeconds() > 2)
+
+                if (event.key.code == Keyboard::J)
                 {
-                    clock2.restart();
-                    bullet* b2 = new bullet();
-                    b2->name = "bullet2";
-                    b2->settings(sBullet, p2->x, p2->y, p2->angle, 10);
-                    b2->dx = cos(b2->angle * DEGTORAD) * 6;
-                    b2->dy = sin(b2->angle * DEGTORAD) * 6;
-                    gunshotSound.play();
-                    //cout << p2->angle << endl;
-                    //cout << b2->angle << endl;
-                    entities.push_back(b2);
+                    time2 = clock2.getElapsedTime();
+                    if (time2.asSeconds() > 2)
+                    {
+                        clock2.restart();
+                        bullet* b2 = new bullet();
+                        b2->name = "bullet2";
+                        b2->settings(sBullet, p2->x, p2->y, p2->angle, 10);
+                        b2->dx = cos(b2->angle * DEGTORAD) * 6;
+                        b2->dy = sin(b2->angle * DEGTORAD) * 6;
+                        gunshotSound.play();
+                        //cout << p2->angle << endl;
+                        //cout << b2->angle << endl;
+                        entities.push_back(b2);
+                    }
+
                 }
 
+                if (event.key.code == Keyboard::Escape)
+                {
+                    cout << "escape\n";
+                    score1 = 0;
+                    score2 = 0;
+                    endSound.stop();
+                    bgm.play();
+                    Game = true;
+                }
             }
-            text1.setString(to_string(score1));
-            text2.setString(to_string(score2));
-
-            if (event.key.code == Keyboard::Escape)
+            else
             {
-                score1 = 0;
-                score2 = 0;
-                endSound.stop();
-                Game = true;
+                if (event.key.code == Keyboard::Enter)
+                {
+                    atStartMenu = false;
+                    start.stop();
+                    bgm.play();
+                }
             }
         }
+        if (!atStartMenu)
+        {
+            if (Keyboard::isKeyPressed(Keyboard::Right)) p->angle += 3;
+            if (Keyboard::isKeyPressed(Keyboard::Left))  p->angle -= 3;
+            if (Keyboard::isKeyPressed(Keyboard::Up)) p->thrust = true;
+            else p->thrust = false;
+            if (Keyboard::isKeyPressed(Keyboard::Down)) p->back = true;
+            else p->back = false;
 
-        if (Keyboard::isKeyPressed(Keyboard::Right)) p->angle += 3;
-        if (Keyboard::isKeyPressed(Keyboard::Left))  p->angle -= 3;
-        if (Keyboard::isKeyPressed(Keyboard::Up)) p->thrust = true;
-        else p->thrust = false;
-        if (Keyboard::isKeyPressed(Keyboard::Down)) p->back = true;
-        else p->back = false;
-
-        if (Keyboard::isKeyPressed(Keyboard::D)) p2->angle += 3;
-        if (Keyboard::isKeyPressed(Keyboard::A))  p2->angle -= 3;
-        if (Keyboard::isKeyPressed(Keyboard::W)) p2->thrust = true;
-        else p2->thrust = false;
-        if (Keyboard::isKeyPressed(Keyboard::S)) p2->back = true;
-        else p2->back = false;
-
+            if (Keyboard::isKeyPressed(Keyboard::D)) p2->angle += 3;
+            if (Keyboard::isKeyPressed(Keyboard::A))  p2->angle -= 3;
+            if (Keyboard::isKeyPressed(Keyboard::W)) p2->thrust = true;
+            else p2->thrust = false;
+            if (Keyboard::isKeyPressed(Keyboard::S)) p2->back = true;
+            else p2->back = false;
+        }
         if (!Game)
             continue;
-
+        
         for (auto a : entities)
             for (auto b : entities)
             {
@@ -487,7 +439,13 @@ int main()
                         e->name = "explosion";
                         explosionSound.play();
                         entities.push_back(e);
-
+                        for (auto e : entities)
+                        {
+                            if (e->name == "bullet1" || e->name == "bullet2")
+                            {
+                                e->life = 0;
+                            }
+                        }
                         p->settings(sPlayer, W / 2, H / 2, 0, 20);
                         p->dx = 0; p->dy = 0;
                     }
@@ -501,27 +459,25 @@ int main()
                         e->name = "explosion";
                         explosionSound.play();
                         entities.push_back(e);
-
+                        for (auto e : entities)
+                        {
+                            if (e->name == "bullet1" || e->name == "bullet2")
+                            {
+                                e->life = 0;
+                            }
+                        }
                         p2->settings(sPlayer2, 100, 200, 0, 20);
                         p2->dx = 0; p2->dy = 0;
                     }
-                if (a->name == "player1" && b->name == "bigbuffer")
-                {
-                    if (isCollide(a, b))
-                    {
-                        b->life = false;
-                        a->anim = sBigTank;
-                        a->R = 40;
-                    }
-                }
             }
 
 
 
         for (auto e : entities)
+        {
             if (e->name == "explosion")
                 if (e->anim.isEnd()) e->life = 0;
-
+        }
         for (auto i = entities.begin(); i != entities.end();)
         {
             Entity* e = *i;
@@ -531,66 +487,31 @@ int main()
             if (e->life == false) { i = entities.erase(i); delete e; }
             else i++;
 
-        if (FloatRect(p->x, p->y, 3, 3).intersects(rec1.getGlobalBounds()))
-        {
-            p->thrust = false;
-        }
 
         }
-        //cout << Game << endl;
+        text1.setString(to_string(score1));
+        text2.setString(to_string(score2));
+        
         //////draw//////
-        //app.clear();
-        //app.draw(background);
-
-        for (auto i : entities)
-            i->draw(app);
-        //cout << press << endl;
-        app.draw(text1);
-        app.draw(text2);
-        app.draw(score);
-        app.draw(rec1);
-        if (!Game)
-            app.draw(Gameover);
-
+        if (!atStartMenu)
+        {
+            app.draw(background);
+            for (auto i : entities)
+                i->draw(app);
+            //cout << press << endl;
+            app.draw(text1);
+            app.draw(text2);
+            app.draw(score);
+            if (score1 >= 5 || score2 >= 5)
+            {
+                bgm.stop();
+                endSound.play();
+                Game = false;
+            }
+            if (!Game)
+                app.draw(Gameover);
+        }
         app.display();
     }
     return 0;
-}
-
-void drawWall_T(sf::RectangleShape& rec1, sf::RectangleShape& rec2, int x, int y, string direction) {
-    int length = 300, width = 20;
-    int half = (length - width) / 2;
-    sf::Color color = sf::Color::Black;
-    if (direction == "up") {
-        rec1.setSize(sf::Vector2f(length, width));
-        rec1.setFillColor(color);
-        rec1.setPosition(x, y);
-        rec2.setSize(sf::Vector2f(width, half));
-        rec2.setFillColor(color);
-        rec2.setPosition(x + half, y - half);
-    }
-    else if (direction == "down") {
-        rec1.setSize(sf::Vector2f(length, width));
-        rec1.setFillColor(color);
-        rec1.setPosition(x, y);
-        rec2.setSize(sf::Vector2f(width, half));
-        rec2.setFillColor(color);
-        rec2.setPosition(x + half, y);
-    }
-    else if (direction == "left") {
-        rec1.setSize(sf::Vector2f(width, length));
-        rec1.setFillColor(color);
-        rec1.setPosition(x, y);
-        rec2.setSize(sf::Vector2f(half, width));
-        rec2.setFillColor(color);
-        rec2.setPosition(x - half, y + half);
-    }
-    else if (direction == "right") {
-        rec1.setSize(sf::Vector2f(width, length));
-        rec1.setFillColor(color);
-        rec1.setPosition(x, y);
-        rec2.setSize(sf::Vector2f(half, width));
-        rec2.setFillColor(color);
-        rec2.setPosition(x, y + half);
-    }
 }
