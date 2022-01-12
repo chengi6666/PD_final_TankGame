@@ -115,11 +115,15 @@ public:
         if (x < 0 || x > W)
         {
             dx = -dx;
+            angle += 180 - 2 * angle;
+            cout << angle << endl;
             collision++;
         }
         if (y < 0 || y > H)
         {
             dy = -dy;
+            angle = 360 - angle;
+            cout << angle << endl;
             collision++;
         }
 
@@ -182,6 +186,7 @@ public:
         {
             x += dx;
             y += dy;
+            
         }
         /*
         if (x > W) x = 0; if (x < 0) x = W;
@@ -215,19 +220,20 @@ int main()
     app.setKeyRepeatEnabled(false);
     app.setFramerateLimit(60);
 
-    Texture t1, t2, t3, t4, t5, t6, t7, t11, bigtank, bigbuff;
+    Texture t1, t2, t3, t4, t5, t6, t7, t11, bigtank, bigbuff, tControls;
     //Texture b1, b2, b3;
-    t1.loadFromFile("images/asteroids/tank_11.png");
-    t11.loadFromFile("images/asteroids/tank_yellow_11.png");
-    t2.loadFromFile("images/asteroids/background_blue.png");
-    t3.loadFromFile("images/asteroids/explosions/type_C.png");
-    t4.loadFromFile("images/asteroids/rock.png");
-    //t5.loadFromFile("images/asteroids/fire_red.png");
-    t5.loadFromFile("images/asteroids/bullet_circle3.png");
-    t6.loadFromFile("images/asteroids/rock_small.png");
-    t7.loadFromFile("images/asteroids/explosions/type_B.png");
-    bigtank.loadFromFile("images/asteroids/bigtank.png");
-    bigbuff.loadFromFile("images/asteroids/smallTank2.png");
+    t1.loadFromFile("images/tank/tank_11.png");
+    t11.loadFromFile("images/tank/tank_yellow_11.png");
+    t2.loadFromFile("images/tank/background_blue.png");
+    t3.loadFromFile("images/tank/explosions/type_C.png");
+    t4.loadFromFile("images/tank/rock.png");
+    t5.loadFromFile("images/new/bullet2.png");
+    //t5.loadFromFile("images/asteroids/bullet_circle3.png");
+    t6.loadFromFile("images/tank/rock_small.png");
+    t7.loadFromFile("images/tank/explosions/type_B.png");
+    bigtank.loadFromFile("images/tank/bigtank.png");
+    bigbuff.loadFromFile("images/tank/smallTank2.png");
+    tControls.loadFromFile("images/new/controls2.png");
 
     t1.setSmooth(true);
     t2.setSmooth(true);
@@ -237,8 +243,8 @@ int main()
     Animation sExplosion(t3, 0, 0, 256, 256, 48, 0.5);
     Animation sRock(t4, 0, 0, 64, 64, 16, 0.2);
     Animation sRock_small(t6, 0, 0, 64, 64, 16, 0.2);
-    //Animation sBullet(t5, 0, 0, 32, 64, 16, 0.8);
-    Animation sBullet(t5, 0, 0, 22, 22, 1, 0);
+    Animation sBullet(t5, 0, 0, 12, 36, 1, 0);
+    //Animation sBullet(t5, 0, 0, 22, 22, 1, 0);
     Animation sPlayer(t1, 0, 0, 59, 59, 1, 0);
     Animation sPlayer2(t11, 0, 0, 59, 59, 1, 0);
     Animation sPlayer_go(t1, 0, 0, 59, 59, 1, 0);
@@ -251,13 +257,6 @@ int main()
 
     std::list<Entity*> entities;
 
-    /*for (int i = 0; i < 15; i++) // 15 asteroids
-    {
-        asteroid* a = new asteroid();
-        // void settings(Animation& a, int X, int Y, float Angle = 0, int radius = 1)
-        a->settings(sRock, rand() % W, rand() % H, rand() % 360, 25);
-        entities.push_back(a);
-    }*/
 
     player* p = new player();
     p->settings(sPlayer, 200, 200, 0, 20);
@@ -304,7 +303,7 @@ int main()
     StartMenu.setFillColor(Color::White);
     StartMenu.setCharacterSize(50);
     StartMenu.setPosition(0, H / 2);
-    StartMenu.setString("PRESS ENTER TO START");
+    StartMenu.setString("PRESS SPACE TO START");
 
     bool atStartMenu = true;
     bool Game = true;
@@ -328,6 +327,13 @@ int main()
     gunshotSound.setBuffer(gunshotBuffer);
     int test = 0;
 
+    sf::RectangleShape controls;
+    controls.setSize(sf::Vector2f(738, 440));
+    controls.setPosition(0, 0);
+    //controls.setFillColor(sf::Color::Blue);
+    controls.setTexture(&tControls);
+    bool seeControls = false;
+
     /////main loop/////
     while (app.isOpen())
     {
@@ -340,7 +346,6 @@ int main()
             app.draw(StartMenu);
             //continue;
         }
-
         Event event;
         while (app.pollEvent(event))
         {
@@ -349,7 +354,7 @@ int main()
 
             if (!atStartMenu)
             {
-                if (event.key.code == Keyboard::Space)
+                if (event.key.code == Keyboard::Enter)
                 {
                     time = clock.getElapsedTime();
                     if (time.asSeconds() > 2)
@@ -358,6 +363,7 @@ int main()
                         bullet* b = new bullet();
                         b->name = "bullet1";
                         b->settings(sBullet, p->x, p->y, p->angle, 10);
+                        cout << "start angle: " << b->angle << endl;
                         b->dx = cos(b->angle * DEGTORAD) * 6;
                         b->dy = sin(b->angle * DEGTORAD) * 6;
                         gunshotSound.play();
@@ -368,7 +374,7 @@ int main()
 
                 }
 
-                if (event.key.code == Keyboard::J)
+                if (event.key.code == Keyboard::Z)
                 {
                     time2 = clock2.getElapsedTime();
                     if (time2.asSeconds() > 2)
@@ -392,6 +398,13 @@ int main()
                     cout << "escape\n";
                     score1 = 0;
                     score2 = 0;
+                    for (auto e : entities)
+                    {
+                        if (e->name == "bullet1" || e->name == "bullet2")
+                        {
+                            e->life = 0;
+                        }
+                    }
                     endSound.stop();
                     bgm.play();
                     Game = true;
@@ -399,11 +412,28 @@ int main()
             }
             else
             {
-                if (event.key.code == Keyboard::Enter)
+                if (event.key.code == Keyboard::Space)
                 {
                     atStartMenu = false;
+                    //cout << atStartMenu << endl;
                     start.stop();
                     bgm.play();
+                }
+                if (!seeControls)
+                {
+                    if (event.key.code == Keyboard::P)
+                    {
+                        seeControls = true;
+                        cout << "seeControls: " << seeControls << endl;
+                    }
+                }
+                else
+                {
+                    if (event.key.code == Keyboard::O)
+                    {
+                        seeControls = false;
+                        cout << "seeControls: " << seeControls << endl;
+                    }
                 }
             }
         }
@@ -416,11 +446,11 @@ int main()
             if (Keyboard::isKeyPressed(Keyboard::Down)) p->back = true;
             else p->back = false;
 
-            if (Keyboard::isKeyPressed(Keyboard::D)) p2->angle += 3;
-            if (Keyboard::isKeyPressed(Keyboard::A))  p2->angle -= 3;
-            if (Keyboard::isKeyPressed(Keyboard::W)) p2->thrust = true;
+            if (Keyboard::isKeyPressed(Keyboard::G)) p2->angle += 3;
+            if (Keyboard::isKeyPressed(Keyboard::D))  p2->angle -= 3;
+            if (Keyboard::isKeyPressed(Keyboard::R)) p2->thrust = true;
             else p2->thrust = false;
-            if (Keyboard::isKeyPressed(Keyboard::S)) p2->back = true;
+            if (Keyboard::isKeyPressed(Keyboard::F)) p2->back = true;
             else p2->back = false;
         }
         if (!Game)
@@ -506,12 +536,26 @@ int main()
             {
                 bgm.stop();
                 endSound.play();
+                for (auto e : entities)
+                {
+                    if (e->name == "bullet1" || e->name == "bullet2")
+                    {
+                        e->life = 0;
+                    }
+                }
                 Game = false;
             }
             if (!Game)
                 app.draw(Gameover);
+            
         }
+        else if (seeControls)
+        {
+            app.draw(controls);
+        }
+        //app.draw(controls);
         app.display();
     }
     return 0;
 }
+
