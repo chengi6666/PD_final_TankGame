@@ -145,7 +145,7 @@ class player : public Entity
 public:
     bool thrust, back;
     int buffer;
-
+    float speed = 0;
     player()
     {
         name = "player";
@@ -175,7 +175,7 @@ public:
             dy *= 0.99;
         }
         int maxSpeed = 15;
-        float speed = sqrt(dx * dx + dy * dy);
+        speed = sqrt(dx * dx + dy * dy);
         if (speed > maxSpeed)
         {
             dx *= maxSpeed / speed;
@@ -216,23 +216,23 @@ int main()
     start.openFromFile("audio effect/start.ogg");
     endSound.openFromFile("audio effect/end.ogg");
     int pastTime = 0;
-    RenderWindow app(VideoMode(W, H), "Asteroids!");
+    RenderWindow app(VideoMode(W, H), "Tank Game!");
     app.setKeyRepeatEnabled(false);
     app.setFramerateLimit(60);
-
+    
+    auto image = sf::Image{};
+    image.loadFromFile("images/tank/tank_green.png");
+    
+    app.setIcon(image.getSize().x, image.getSize().y, image.getPixelsPtr());
     Texture t1, t2, t3, t4, t5, t6, t7, t11, bigtank, bigbuff, tControls;
     //Texture b1, b2, b3;
-    t1.loadFromFile("images/tank/tank_11.png");
-    t11.loadFromFile("images/tank/tank_yellow_11.png");
+    t1.loadFromFile("images/tank/tank_green.png");
+    t11.loadFromFile("images/tank/tank_yellow.png");
     t2.loadFromFile("images/tank/background_blue.png");
     t3.loadFromFile("images/tank/explosions/type_C.png");
-    t4.loadFromFile("images/tank/rock.png");
-    t5.loadFromFile("images/new/bullet2.png");
+    t5.loadFromFile("images/tank/bullet.png");
     //t5.loadFromFile("images/asteroids/bullet_circle3.png");
-    t6.loadFromFile("images/tank/rock_small.png");
     t7.loadFromFile("images/tank/explosions/type_B.png");
-    bigtank.loadFromFile("images/tank/bigtank.png");
-    bigbuff.loadFromFile("images/tank/smallTank2.png");
     tControls.loadFromFile("images/new/controls2.png");
 
     t1.setSmooth(true);
@@ -241,13 +241,11 @@ int main()
 
     // Animation(Texture& t, int x, int y, int w, int h, int count, float Speed) //rotating speed of rock etc.
     Animation sExplosion(t3, 0, 0, 256, 256, 48, 0.5);
-    Animation sRock(t4, 0, 0, 64, 64, 16, 0.2);
-    Animation sRock_small(t6, 0, 0, 64, 64, 16, 0.2);
-    Animation sBullet(t5, 0, 0, 12, 36, 1, 0);
+    Animation sBullet(t5, 0, 0, 12, 35, 1, 0);
     //Animation sBullet(t5, 0, 0, 22, 22, 1, 0);
-    Animation sPlayer(t1, 0, 0, 59, 59, 1, 0);
-    Animation sPlayer2(t11, 0, 0, 59, 59, 1, 0);
-    Animation sPlayer_go(t1, 0, 0, 59, 59, 1, 0);
+    Animation sPlayer(t1, 0, 0, 54, 56, 1, 0);
+    Animation sPlayer2(t11, 0, 0, 53, 57, 1, 0);
+    //Animation sPlayer_go(t1, 0, 0, 59, 59, 1, 0);
     Animation sExplosion_ship(t7, 0, 0, 192, 192, 64, 0.5);
     Animation sBigTank(bigtank, 0, 0, 117, 118, 1, 0);
     Animation sBigBuff(bigbuff, 0, 0, 42, 42, 1, 0);
@@ -558,4 +556,3 @@ int main()
     }
     return 0;
 }
-
