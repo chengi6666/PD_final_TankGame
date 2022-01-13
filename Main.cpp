@@ -106,9 +106,11 @@ class bullet : public Entity
 {
 public:
     int collision = 0;
+    int speedFactor;
     bullet()
     {
         name = "bullet";
+        speedFactor = 1;
     }
 
     void  update()
@@ -155,7 +157,7 @@ public:
             angle = 360 - angle;
             collision++;
         }
-        
+
         // Second Wall
         if ((abs(x - 400) < epsilon || abs(x - 670) < epsilon) && (y >= 350 && y < 380))
         {
@@ -163,7 +165,7 @@ public:
             angle += 180 - 2 * angle;
             collision++;
         }
-       
+
         if ((abs(y - 350) < epsilon || abs(y - 380) < epsilon) && (x >= 400 && x < 670))
         {
             dy = -dy;
@@ -208,9 +210,9 @@ public:
             angle = 360 - angle;
             collision++;
         }
-        x += dx;
-        y += dy;
-        
+        x += dx * speedFactor;
+        y += dy * speedFactor;
+
         if (collision >= 5)
         {
             life = 0;
@@ -231,6 +233,10 @@ public:
     {
         name = "player";
         buffer = 0;
+    }
+    void changeBuffer(int T, int who) {
+        type = T;
+        buffer = T;
     }
 
     void update()
@@ -263,12 +269,12 @@ public:
             dy *= maxSpeed / speed;
         }
 
-        if (!(dx + x < W && dx + x > 0 && dy + y < H && dy + y > 0) || 
+        if (!(dx + x < W && dx + x > 0 && dy + y < H && dy + y > 0) ||
             (dx + x < 360 && dx + x > 210 && dy + y < 130 && dy + y > 100) ||
             (dx + x < 360 && dx + x > 330 && dy + y < 250 && dy + y > 100) ||
             (dx + x < 550 && dx + x > 520 && dy + y < 380 && dy + y > 260) ||
             (dx + x < 670 && dx + x > 400 && dy + y < 380 && dy + y > 350) ||
-            (dx + x < 840 && dx + x > 720 && dy + y < 110 && dy + y > 80)  ||
+            (dx + x < 840 && dx + x > 720 && dy + y < 110 && dy + y > 80) ||
             (dx + x < 750 && dx + x > 720 && dy + y < 200 && dy + y > 80))
         {
             stop = true;
@@ -276,7 +282,7 @@ public:
         else
         {
             stop = false;
-        }        
+        }
         /*if (dx + x < 647 && dx + x > 500 && dy + y < 250 && dy + y > 200)
         {
             stop = true;
@@ -293,7 +299,18 @@ public:
 
 };
 
+class buff : public Entity {
+public:
 
+
+    buff()
+    {
+    }
+    buff(int t) {
+        type = t;
+
+    }
+};
 bool isCollide(Entity* a, Entity* b)
 {
     return (b->x - a->x) * (b->x - a->x) +
@@ -307,6 +324,7 @@ int main()
     srand(time(0));
     sf::Clock clock;
     sf::Clock clock2;
+    sf::Clock clock3;
     sf::Time time;
     sf::Time time2;
     sf::Music bgm, start, endSound;
@@ -317,13 +335,13 @@ int main()
     RenderWindow app(VideoMode(W, H), "Tank Game!");
     app.setKeyRepeatEnabled(false);
     app.setFramerateLimit(60);
-    
+
     auto image = sf::Image{};
     image.loadFromFile("images/tank/tank_green.png");
-    
+
     app.setIcon(image.getSize().x, image.getSize().y, image.getPixelsPtr());
-    Texture t1, t2, t3, t4, t5, t6, t7, t11, bigtank, bigbuff, tControls, tBlock, tStartMenu;
-    //Texture b1, b2, b3;
+    Texture t1, t2, t3, t4, t5, t6, t7, t11, bigtank, bigbuff, tControls, tBlock, tStartMenu, t8, st1, st2;
+    Texture b1, b2, b3;
     t1.loadFromFile("images/tank/tank_green.png");
     t11.loadFromFile("images/tank/tank_yellow.png");
     t2.loadFromFile("images/tank/background_brown.png");
@@ -334,6 +352,14 @@ int main()
     tControls.loadFromFile("images/new/controls2.png");
     tBlock.loadFromFile("images/tank/block3.png");
     tStartMenu.loadFromFile("images/tank/sky.png");
+
+    t8.loadFromFile("images/tank/bullet_big.png");
+    st1.loadFromFile("images/tank/tank_green_small.png");
+    st2.loadFromFile("images/tank/tank_yellow_small.png");
+    b1.loadFromFile("images/tank/bigBullet.png");
+    b2.loadFromFile("images/tank/smallTank.png");
+    b3.loadFromFile("images/tank/fastBullet.png");
+
 
     t1.setSmooth(true);
     t2.setSmooth(true);
@@ -352,14 +378,21 @@ int main()
     Animation sBigBuff(bigbuff, 0, 0, 42, 42, 1, 0);
     //Animation sBlock(tBlock, 0, 0, 49, 50, 1, 0);
 
+    //Animation sBullet(t5, 0, 0, 25, 25, 16, 0);
+    Animation sBigBullet(t8, 0, 0, 12, 65, 16, 0);
+    Animation smallPlayer(st1, 0, 0, 30, 30, 1, 0);
+    Animation smallPlayer2(st2, 0, 0, 30, 30, 1, 0);
+    Animation Buffer1(b1, 0, 0, 40, 40, 1, 0);
+    Animation Buffer2(b2, 0, 0, 40, 40, 1, 0);
+    Animation Buffer3(b3, 0, 0, 40, 40, 1, 0);
 
     Sprite blocks[100];
     int n = 0;
     for (int i = 0; i < 5; i++)
     {
-            blocks[n].setTexture(tBlock);
-            blocks[n].setPosition(330,  100 + i * 30);
-            n++;
+        blocks[n].setTexture(tBlock);
+        blocks[n].setPosition(330, 100 + i * 30);
+        n++;
     }
     for (int i = 1; i < 5; i++)
     {
@@ -438,8 +471,15 @@ int main()
     StartMenu.setFont(font);
     StartMenu.setFillColor(Color::Black);
     StartMenu.setCharacterSize(50);
-    StartMenu.setPosition(W / 2 - 250, H / 2);
-    StartMenu.setString("PRESS  SPACE  TO  START\nPress  P  TO SEE CONTROLS");
+    StartMenu.setPosition(W / 2 - 250, H / 2 + 100);
+    StartMenu.setString("PRESS  SPACE  TO  START");
+
+    sf::Text Title;
+    Title.setFont(font);
+    Title.setFillColor(Color::Black);
+    Title.setCharacterSize(200);
+    Title.setPosition(0, H / 2 - 200);
+    Title.setString("TANK\tCITY");
 
     bool atStartMenu = true;
     bool Game = true;
@@ -473,6 +513,45 @@ int main()
     /////main loop/////
     while (app.isOpen())
     {
+        sf::Time elapsedTime = clock3.getElapsedTime();
+        if (elapsedTime.asSeconds() > 10) {
+            for (auto i = entities.begin(); i != entities.end();)
+            {
+                Entity* e = *i;
+                if (e->name == "buffer") { e->life = false; i = entities.erase(i); delete e; }
+                else i++;
+            }
+            p->changeBuffer(0, 1);
+            p2->changeBuffer(0, 2);
+
+            //reset the tank size
+            p->anim = sPlayer;
+            p2->anim = sPlayer2;
+            p->R = 20;
+            p2->R = 20;
+
+            buff* buffer = new buff();
+            buffer->name = "buffer";
+            int type = rand() % (3) + 1;
+            int randX = rand() % W + 1;
+            int randY = rand() % H + 1;
+            switch (type) {
+            case(1):
+                buffer->settings(Buffer1, randX, randY, 0, 0);
+                buffer->type = type;
+                break;
+            case(2):
+                buffer->settings(Buffer2, randX, randY, 0, 0);
+                buffer->type = type;
+                break;
+            case(3):
+                buffer->settings(Buffer3, randX, randY, 0, 0);
+                buffer->type = type;
+                break;
+            }
+            entities.push_back(buffer);
+            clock3.restart();
+        }
 
         app.clear();
 
@@ -480,6 +559,7 @@ int main()
         {
             app.draw(startBackground);
             app.draw(StartMenu);
+            app.draw(Title);
             //continue;
         }
         Event event;
@@ -502,6 +582,20 @@ int main()
                         b->dx = cos(b->angle * DEGTORAD) * 6;
                         b->dy = sin(b->angle * DEGTORAD) * 6;
                         gunshotSound.play();
+                        if (p->type == 0 || p->type == 2) {
+                            b->settings(sBullet, p->x, p->y, p->angle, 10);
+                            //b->setSize(1, 1);
+                        }
+                        else if (p->type == 1) {
+                            b->settings(sBigBullet, p->x, p->y, p->angle, 20);
+                            b->R = 40;
+                            //b->setSize(2, 2);
+                        }
+                        else if (p->type == 3) {
+                            b->settings(sBullet, p->x, p->y, p->angle, 10);
+                            b->speedFactor = 3;
+                        }
+
                         entities.push_back(b);
                         //bulletNum--;
                         //press++;
@@ -520,6 +614,21 @@ int main()
                         b2->settings(sBullet, p2->x, p2->y, p2->angle, 10);
                         b2->dx = cos(b2->angle * DEGTORAD) * 6;
                         b2->dy = sin(b2->angle * DEGTORAD) * 6;
+                        if (p2->type == 0 || p2->type == 2) {
+                            b2->settings(sBullet, p2->x, p2->y, p2->angle, 10);
+                            //b2->setSize(1, 1);
+                        }
+                        //make bullet bigger
+                        else if (p2->type == 1) {
+                            b2->settings(sBigBullet, p2->x, p2->y, p2->angle, 20);
+                            // b2->setSize(2, 2);
+                            b2->R = 40;
+                        }
+                        else if (p2->type == 3) {
+                            b2->settings(sBullet, p2->x, p2->y, p2->angle, 10);
+                            b2->speedFactor = 3;
+                        }
+
                         gunshotSound.play();
                         entities.push_back(b2);
                     }
@@ -584,7 +693,7 @@ int main()
         }
         if (!Game)
             continue;
-        
+
         for (auto a : entities)
             for (auto b : entities)
             {
@@ -635,7 +744,55 @@ int main()
                         p->stop = true;
                     }
                 }
+                if (a->name == "player1" && b->name == "buffer")
+                    if (isCollide(a, b))
+                    {
+                        b->life = false;
+
+                        /*Entity* e = new Entity();
+                        e->settings(sExplosion_ship, a->x, a->y);
+                        e->name = "explosion";
+                        entities.push_back(e);
+                        score2++;
+                        */
+                        /*
+                        p->settings(sPlayer, W / 2, H / 2, 0, 20);
+                        p->dx = 0; p->dy = 0;
+                        */
+                        p->changeBuffer(b->type, 1);
+                        if (b->type == 2) {
+                            p->R = 10;
+                            p->anim = smallPlayer;
+                            p->draw(app);
+                        }
+                    }
+                if (a->name == "player2" && b->name == "buffer")
+                    if (isCollide(a, b))
+                    {
+                        b->life = false;
+
+                        /*Entity* e = new Entity();
+                        e->settings(sExplosion_ship, a->x, a->y);
+                        e->name = "explosion";
+                        entities.push_back(e);
+                        score2++;
+                        */
+                        /*
+                        p->settings(sPlayer, W / 2, H / 2, 0, 20);
+                        p->dx = 0; p->dy = 0;
+                        */
+                        p2->changeBuffer(b->type, 2);
+                        if (b->type == 2) {
+                            p2->R = 10;
+                            p2->anim = smallPlayer2;
+                            p2->draw(app);
+                        }
+
+                    }
             }
+
+
+
 
 
 
@@ -686,7 +843,7 @@ int main()
             }
             if (!Game)
                 app.draw(Gameover);
-            
+
         }
         else if (seeControls)
         {
@@ -697,3 +854,4 @@ int main()
     }
     return 0;
 }
+
