@@ -91,6 +91,11 @@ public:
         anim.sprite.setPosition(x, y);
         anim.sprite.setRotation(angle + 90);
         app.draw(anim.sprite);
+        //CircleShape circle(R);
+        //circle.setFillColor(Color(255, 0, 0, 170));
+        //circle.setPosition(x, y);
+        //circle.setOrigin(R, R);
+        //app.draw(circle);
 
     }
 
@@ -116,17 +121,93 @@ public:
         {
             dx = -dx;
             angle += 180 - 2 * angle;
-            cout << angle << endl;
             collision++;
         }
         if (y < 0 || y > H)
         {
             dy = -dy;
             angle = 360 - angle;
-            cout << angle << endl;
+            collision++;
+        }
+        float epsilon = 6;
+        // First Wall
+        if ((abs(x - 210) < epsilon || abs(x - 330) < epsilon) && (y >= 100 && y < 130))
+        {
+            dx = -dx;
+            angle += 180 - 2 * angle;;
+            collision++;
+        }
+        if ((abs(y - 100) < epsilon || abs(y - 130) < epsilon) && (x >= 210 && x < 330))
+        {
+            dy = -dy;
+            angle = 360 - angle;
+            collision++;
+        }
+        if ((abs(x - 330) < epsilon || abs(x - 360) < epsilon) && (y >= 100 && y < 250))
+        {
+            dx = -dx;
+            angle += 180 - 2 * angle;
+            collision++;
+        }
+        if ((abs(y - 100) < epsilon || abs(y - 250) < epsilon) && (x >= 330 && x < 360))
+        {
+            dy = -dy;
+            angle = 360 - angle;
+            collision++;
+        }
+        
+        // Second Wall
+        if ((abs(x - 400) < epsilon || abs(x - 670) < epsilon) && (y >= 350 && y < 380))
+        {
+            dx = -dx;
+            angle += 180 - 2 * angle;
+            collision++;
+        }
+       
+        if ((abs(y - 350) < epsilon || abs(y - 380) < epsilon) && (x >= 400 && x < 670))
+        {
+            dy = -dy;
+            angle = 360 - angle;
+            collision++;
+        }
+        if ((abs(x - 520) < epsilon || abs(x - 550) < epsilon) && (y >= 260 && y < 350))
+        {
+            dx = -dx;
+            angle += 180 - 2 * angle;
+            collision++;
+        }
+        if ((abs(y - 260) < epsilon || abs(y - 350) < epsilon) && (x >= 520 && x < 550))
+        {
+            dy = -dy;
+            angle = 360 - angle;
+            collision++;
+        }
+        // Third Wall
+        if ((abs(x - 720) < epsilon || abs(x - 840) < epsilon) && (y >= 80 && y < 110))
+        {
+            dx = -dx;
+            angle += 180 - 2 * angle;
             collision++;
         }
 
+        if ((abs(y - 80) < epsilon || abs(y - 110) < epsilon) && (x >= 720 && x < 840))
+        {
+            dy = -dy;
+            angle = 360 - angle;
+            collision++;
+        }
+        if ((abs(x - 720) < epsilon || abs(x - 750) < epsilon) && (y >= 110 && y < 200))
+        {
+            dx = -dx;
+            angle += 180 - 2 * angle;
+            collision++;
+        }
+        if ((abs(y - 110) < epsilon || abs(y - 200) < epsilon) && (x >= 720 && x < 750))
+        {
+            dy = -dy;
+            angle = 360 - angle;
+            collision++;
+        }
         x += dx;
         y += dy;
         
@@ -143,7 +224,7 @@ public:
 class player : public Entity
 {
 public:
-    bool thrust, back;
+    bool thrust, back, stop = false;
     int buffer;
     float speed = 0;
     player()
@@ -182,11 +263,28 @@ public:
             dy *= maxSpeed / speed;
         }
 
-        if (dx + x < W && dx + x > 0 && dy + y < H && dy + y > 0)
+        if (!(dx + x < W && dx + x > 0 && dy + y < H && dy + y > 0) || 
+            (dx + x < 360 && dx + x > 210 && dy + y < 130 && dy + y > 100) ||
+            (dx + x < 360 && dx + x > 330 && dy + y < 250 && dy + y > 100) ||
+            (dx + x < 550 && dx + x > 520 && dy + y < 380 && dy + y > 260) ||
+            (dx + x < 670 && dx + x > 400 && dy + y < 380 && dy + y > 350) ||
+            (dx + x < 840 && dx + x > 720 && dy + y < 110 && dy + y > 80)  ||
+            (dx + x < 750 && dx + x > 720 && dy + y < 200 && dy + y > 80))
+        {
+            stop = true;
+        }
+        else
+        {
+            stop = false;
+        }        
+        /*if (dx + x < 647 && dx + x > 500 && dy + y < 250 && dy + y > 200)
+        {
+            stop = true;
+        }*/
+        if (!stop)
         {
             x += dx;
             y += dy;
-            
         }
         /*
         if (x > W) x = 0; if (x < 0) x = W;
@@ -224,20 +322,23 @@ int main()
     image.loadFromFile("images/tank/tank_green.png");
     
     app.setIcon(image.getSize().x, image.getSize().y, image.getPixelsPtr());
-    Texture t1, t2, t3, t4, t5, t6, t7, t11, bigtank, bigbuff, tControls;
+    Texture t1, t2, t3, t4, t5, t6, t7, t11, bigtank, bigbuff, tControls, tBlock, tStartMenu;
     //Texture b1, b2, b3;
     t1.loadFromFile("images/tank/tank_green.png");
     t11.loadFromFile("images/tank/tank_yellow.png");
-    t2.loadFromFile("images/tank/background_blue.png");
+    t2.loadFromFile("images/tank/background_brown.png");
     t3.loadFromFile("images/tank/explosions/type_C.png");
     t5.loadFromFile("images/tank/bullet.png");
     //t5.loadFromFile("images/asteroids/bullet_circle3.png");
     t7.loadFromFile("images/tank/explosions/type_B.png");
     tControls.loadFromFile("images/new/controls2.png");
+    tBlock.loadFromFile("images/tank/block3.png");
+    tStartMenu.loadFromFile("images/tank/sky.png");
 
     t1.setSmooth(true);
     t2.setSmooth(true);
     Sprite background(t2);
+    Sprite startBackground(tStartMenu);
 
     // Animation(Texture& t, int x, int y, int w, int h, int count, float Speed) //rotating speed of rock etc.
     Animation sExplosion(t3, 0, 0, 256, 256, 48, 0.5);
@@ -249,12 +350,50 @@ int main()
     Animation sExplosion_ship(t7, 0, 0, 192, 192, 64, 0.5);
     Animation sBigTank(bigtank, 0, 0, 117, 118, 1, 0);
     Animation sBigBuff(bigbuff, 0, 0, 42, 42, 1, 0);
-    //Animation Buffer1(b1, 0, 0, 40, 40, 1, 0);
-    //Animation Buffer2(b2, 0, 0, 40, 40, 1, 0);
-    //Animation Buffer3(b3, 0, 0, 40, 40, 1, 0);
+    //Animation sBlock(tBlock, 0, 0, 49, 50, 1, 0);
+
+
+    Sprite blocks[100];
+    int n = 0;
+    for (int i = 0; i < 5; i++)
+    {
+            blocks[n].setTexture(tBlock);
+            blocks[n].setPosition(330,  100 + i * 30);
+            n++;
+    }
+    for (int i = 1; i < 5; i++)
+    {
+        blocks[n].setTexture(tBlock);
+        blocks[n].setPosition(180 + i * 30, 100);
+        n++;
+    }
+
+    for (int i = 0; i < 9; i++)
+    {
+        blocks[n].setTexture(tBlock);
+        blocks[n].setPosition(400 + i * 30, 350);
+        n++;
+    }
+    for (int i = 1; i < 4; i++)
+    {
+        blocks[n].setTexture(tBlock);
+        blocks[n].setPosition(520, 230 + i * 30);
+        n++;
+    }
+    for (int i = 0; i < 4; i++)
+    {
+        blocks[n].setTexture(tBlock);
+        blocks[n].setPosition(720 + i * 30, 80);
+        n++;
+    }
+    for (int i = 1; i < 4; i++)
+    {
+        blocks[n].setTexture(tBlock);
+        blocks[n].setPosition(720, 80 + i * 30);
+        n++;
+    }
 
     std::list<Entity*> entities;
-
 
     player* p = new player();
     p->settings(sPlayer, 200, 200, 0, 20);
@@ -262,11 +401,10 @@ int main()
     entities.push_back(p);
 
     player* p2 = new player();
-    p2->settings(sPlayer2, 400, 400, 0, 20);
+    p2->settings(sPlayer2, 800, 150, 0, 20);
     p2->name = "player2";
     entities.push_back(p2);
 
-    int bulletNum = 3;
     int score1 = 0, score2 = 0;
     sf::Font font;
     font.loadFromFile("content/ARCADECLASSIC.TTF");
@@ -293,15 +431,15 @@ int main()
     Gameover.setFont(font);
     Gameover.setFillColor(Color::White);
     Gameover.setCharacterSize(100);
-    Gameover.setPosition(500, 270);
+    Gameover.setPosition(W / 2 - 250, H / 2 - 50);
     Gameover.setString("GAME OVER!!!");
 
     sf::Text StartMenu;
     StartMenu.setFont(font);
-    StartMenu.setFillColor(Color::White);
+    StartMenu.setFillColor(Color::Black);
     StartMenu.setCharacterSize(50);
-    StartMenu.setPosition(0, H / 2);
-    StartMenu.setString("PRESS SPACE TO START");
+    StartMenu.setPosition(W / 2 - 250, H / 2);
+    StartMenu.setString("PRESS  SPACE  TO  START\nPress  P  TO SEE CONTROLS");
 
     bool atStartMenu = true;
     bool Game = true;
@@ -340,7 +478,7 @@ int main()
 
         if (atStartMenu)
         {
-
+            app.draw(startBackground);
             app.draw(StartMenu);
             //continue;
         }
@@ -361,7 +499,6 @@ int main()
                         bullet* b = new bullet();
                         b->name = "bullet1";
                         b->settings(sBullet, p->x, p->y, p->angle, 10);
-                        cout << "start angle: " << b->angle << endl;
                         b->dx = cos(b->angle * DEGTORAD) * 6;
                         b->dy = sin(b->angle * DEGTORAD) * 6;
                         gunshotSound.play();
@@ -384,8 +521,6 @@ int main()
                         b2->dx = cos(b2->angle * DEGTORAD) * 6;
                         b2->dy = sin(b2->angle * DEGTORAD) * 6;
                         gunshotSound.play();
-                        //cout << p2->angle << endl;
-                        //cout << b2->angle << endl;
                         entities.push_back(b2);
                     }
 
@@ -393,7 +528,6 @@ int main()
 
                 if (event.key.code == Keyboard::Escape)
                 {
-                    cout << "escape\n";
                     score1 = 0;
                     score2 = 0;
                     for (auto e : entities)
@@ -413,7 +547,6 @@ int main()
                 if (event.key.code == Keyboard::Space)
                 {
                     atStartMenu = false;
-                    //cout << atStartMenu << endl;
                     start.stop();
                     bgm.play();
                 }
@@ -422,7 +555,6 @@ int main()
                     if (event.key.code == Keyboard::P)
                     {
                         seeControls = true;
-                        cout << "seeControls: " << seeControls << endl;
                     }
                 }
                 else
@@ -430,7 +562,6 @@ int main()
                     if (event.key.code == Keyboard::O)
                     {
                         seeControls = false;
-                        cout << "seeControls: " << seeControls << endl;
                     }
                 }
             }
@@ -474,7 +605,7 @@ int main()
                                 e->life = 0;
                             }
                         }
-                        p->settings(sPlayer, W / 2, H / 2, 0, 20);
+                        p->settings(sPlayer, 200, 200, 0, 20);
                         p->dx = 0; p->dy = 0;
                     }
                 if (a->name == "player2" && b->name == "bullet1")
@@ -494,9 +625,16 @@ int main()
                                 e->life = 0;
                             }
                         }
-                        p2->settings(sPlayer2, 100, 200, 0, 20);
+                        p2->settings(sPlayer2, 800, 150, 0, 20);
                         p2->dx = 0; p2->dy = 0;
                     }
+                if (a->name == "player1" && b->name == "block")
+                {
+                    if (isCollide(a, b))
+                    {
+                        p->stop = true;
+                    }
+                }
             }
 
 
@@ -517,19 +655,22 @@ int main()
 
 
         }
+
         text1.setString(to_string(score1));
         text2.setString(to_string(score2));
-        
         //////draw//////
         if (!atStartMenu)
         {
             app.draw(background);
             for (auto i : entities)
                 i->draw(app);
-            //cout << press << endl;
             app.draw(text1);
             app.draw(text2);
             app.draw(score);
+            for (int i = 0; i < n; i++)
+            {
+                app.draw(blocks[i]);
+            }
             if (score1 >= 5 || score2 >= 5)
             {
                 bgm.stop();
